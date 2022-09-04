@@ -1,50 +1,67 @@
 import Answer from '../models/Answer.js'
+import School from '../models/School.js'
+import QuestionId from '../models/QuestionId.js'
+import e from 'express'
 
 export const voteAnswer = async (req, res) => {
-  const { id, vote } = req.params
+  const { id, vote, school } = req.params
+  const { email: schoolEmail} = req.body
+  const correctSchoolName = school.replace('+', ' ')
 
   // check if answer exists
-  let answerSchema 
-  let answerExists = false
+  let answerExists
   try {
-    answerSchema = await Answer.find({})
+    answerExists = await Answer.findById(id)
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message })
   }
 
-  console.log(answerSchema)
-
-  for(let answers of answerSchema){
-    if (answers._id.toString() === id){
-        answerExists = true
-        // console.log(answers.answers[0].votes)
-        answers.answers[0].votes++
-        // console.log(answers.answers[0].votes)
-        break
-    }
-  }
-
-  console.log("new")
-  console.log(answerSchema)
-  
-
-  if(answerExists === false){
+  if(!answerExists){
     return res.status(400).json({success: false, message: 'Answer does not exist'})
   }
 
+  // if school is not openForAll then only people from that school can vote
+  let existingSchool
+  if(correctSchoolName !== 'openForAll'){
+    try {
+      existingSchool = await School.findOne({school: correctSchoolName})
+    } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+    }
+
+    if(!existingSchool){
+      return res.status(400).json({success: false, message: 'School does not exist'})
+    }
+
+    // checking if the student who wishes to vote belongs to the same school
+    let studentExists = false
+    const studentDetails = existingSchool.studentDetails
+    for(let student of studentDetails){
+      if(student.schoolEmail === schoolEmail){
+        studentExists = true
+        break
+      }
+    }
+    if(studentExists === false){
+      return res.status(400).json({success: false, message: 'You dont belong to this college, you cannot vote for this answer'})
+    }
+  }
+  
+  const previousVotes = answerExists.votes
+  let newVotes
+  if(vote === 'upvote'){
+    newVotes = previousVotes + 1
+  }
+  else if(vote === 'downvote'){
+    newVotes = previousVotes - 1
+  }
+
   try {
-    // let updatedAnswers = await Answer.updateOne({_id: id}, {$set: {answers: answerSchema}})
-    let updatedAnswers = await Answer.updateOne({ answers: answerSchema })
+    let updatedAnswers = await Answer.updateOne({_id: id}, {$set: {votes: newVotes}})
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message })
   }
 
-  return res.status(200).json({success: true, message: 'Vote added successfully', answerSchema})
+  return res.status(200).json({success: true, message: 'Vote registered successfully'})
 
-
-
-//   let answerVotesValue = existingAnswer.answers.votes
-  if(vote === 'upvote'){
-
-  }
 }

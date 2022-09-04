@@ -15,7 +15,7 @@ questionRouter.post('/:school/:id/addAnswer', addAnswer)    // id here is questi
 questionRouter.get('/:school/:id/getAllAnswers', getAllAnswers)
 
 // search question
-questionRouter.post('/searchQuestion', searchQuestion)
+questionRouter.post('/:school/searchQuestion', searchQuestion)
 
 
 export default questionRouter

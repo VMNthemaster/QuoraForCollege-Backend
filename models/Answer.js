@@ -1,8 +1,6 @@
 import mongoose from 'mongoose'
 
 const answerSchema = new mongoose.Schema({
-  answers: [
-    {
       answeredBy: {
         type: String, 
         required: true,
@@ -18,8 +16,6 @@ const answerSchema = new mongoose.Schema({
         type: Number,
         default: 0,
       },
-    },
-  ],
 })
 
 export default mongoose.model('Answer', answerSchema)
