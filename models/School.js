@@ -37,7 +37,6 @@ const schoolSchema = new mongoose.Schema({
   ],
   studentDetails: {
     type: [studentSchema],
-    required: false,
   },
 })
 

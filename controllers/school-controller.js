@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs'
 import School from '../models/School.js'
+import SchoolName from '../models/SchoolName.js'
+import User from '../models/User.js'
 
 export const addSchool = async (req, res) => {
-  // const school = req.body.school
-  // const adminEmail = req.body.email
   const { school, email: adminEmail, password: adminPassword } = req.body
   let existingSchool
 
@@ -322,4 +322,125 @@ export const removeStudent = async (req, res) => {
     message: 'Student removed successfully',
     studentDetails,
   })
+}
+
+// export const getAllSchools = async (req, res) => {
+//   let schools
+//   try {
+//     schools = await School.find({})
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: error.message })
+//   }
+// }
+
+export const joinSchool = async (req, res) => {
+  const { school } = req.params
+  const { email: studentEmail, generalEmail } = req.body
+  let existingSchool
+  let studentExists = false
+  const correctSchoolName = school.replace('+', ' ')
+
+  try {
+    existingSchool = await School.findOne({ school: correctSchoolName })
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+  }
+
+  if (!existingSchool) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'School does not exist' })
+  }
+
+  let studentDetails = existingSchool.studentDetails
+  for (let student of studentDetails) {
+    if (student.schoolEmail === studentEmail) {
+      studentExists = true
+      break
+    }
+  }
+
+  if (studentExists === false) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'You are not allowed to join this school' })
+  }
+
+  // change his userdetails school name with the provided school name
+  let user
+  try {
+    user = await User.findOne({email: generalEmail})
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+  }
+
+  if(!user){
+    return res.status(400).json({success: false, message: 'User does not exist'})
+  }
+
+  if(user.school !== 'Anonymous'){
+    return res.status(400).json({success: false, message: 'You have already joined the school'})
+  }
+
+  try {
+    let updatedUser = await User.updateOne({email: generalEmail}, {$set: {school: correctSchoolName}})
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+  }
+
+  return res.status(200).json({success: true, message: 'School joined successfully'})
+}
+
+export const leaveSchool = async (req, res) => {
+  const { school } = req.params
+  const { email: studentEmail, generalEmail } = req.body
+  let existingSchool
+  let studentExists = false
+  const correctSchoolName = school.replace('+', ' ')
+
+  try {
+    existingSchool = await School.findOne({ school: correctSchoolName })
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+  }
+
+  if (!existingSchool) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'School does not exist' })
+  }
+
+  let studentDetails = existingSchool.studentDetails
+  for (let student of studentDetails) {
+    if (student.schoolEmail === studentEmail) {
+      studentExists = true
+      break
+    }
+  }
+
+  if(studentExists === false){
+    return res.status(400).json({success: false, message: 'You need to join a school first'})
+  }
+
+  let user
+  try {
+    user = await User.findOne({email: generalEmail})
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+  }
+
+  if(!user){
+    return res.status(400).json({success: false, message: 'User does not exist'})
+  }
+  else if(user.school === 'Anonymous'){
+    return res.status(400).json({success: false, message:'You need to join a school first'})
+  }
+
+  try {
+    let updatedUser = await User.updateOne({email: generalEmail}, {$set: {school: 'Anonymous'}})
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+  }
+
+  return res.status(200).json({success: true, message: 'School left successfully'})
 }
