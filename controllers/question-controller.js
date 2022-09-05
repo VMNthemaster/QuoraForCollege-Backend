@@ -49,6 +49,7 @@ export const addQuestion = async (req, res) => {
 
   const newQuestion = new Question({
     askedBy,
+    askedByEmail: studentEmail,
     question,
     keywords: lowerCaseKeywords,
     answerId: [],
@@ -105,25 +106,39 @@ export const addQuestion = async (req, res) => {
 }
 
 export const deleteQuestion = async (req, res) => {
+  // write deleteQuestion again!!!!
   // add question does not exist and also check if the person is allowed to delete the question, that is he had posted that question then only let him delete
-  const { school, id } = req.params
+  const { school, id, email: studentEmail } = req.params
   const correctSchoolName = school.replace('+', ' ')
 
-  let existingSchool
+  let existingSchool, schoolDetails
   if (correctSchoolName !== 'openForAll') {
     try {
       existingSchool = await QuestionId.findOne({ school: correctSchoolName })
+      schoolDetails = await School.findOne({school: correctSchoolName})
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message })
     }
-    if (!existingSchool) {
+    if (!existingSchool || !schoolDetails) {
       return res
         .status(400)
         .json({ success: false, message: 'School does not exist' })
     }
+
+    const studentDetails = schoolDetails.studentDetails
+    let studentBelongsToCollege = false
+    for(let student of studentDetails){
+      if(student.schoolEmail === studentEmail){
+        studentBelongsToCollege = true
+      }
+    }
+    if(studentBelongsToCollege === false){
+      return res.status(400).json({success: false, message: 'You dont belong to this college'})
+    }
   } else {
     try {
       existingSchool = await QuestionId.findOne({ school: 'openForAll' })
+      // schoolDetails = await School.findOne({school: 'openForAll'})
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message })
     }
@@ -138,10 +153,14 @@ export const deleteQuestion = async (req, res) => {
       { $set: { questionId: questionIds } }
     )
     const question = await Question.findById(id)
+    if(!question){
+      return res.status(400).json({success: false, message: 'Question does not exist'})
+    }
     const answerIds = question.answerId
 
     // deleting the answers associated with the question
     for (let aid of answerIds) {
+
       let deletedAnswer = await Answer.deleteOne({ _id: aid })
     }
 
