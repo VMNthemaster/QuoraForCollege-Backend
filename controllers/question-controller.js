@@ -7,7 +7,7 @@ export const addQuestion = async (req, res) => {
   // we have to check for image file also
   const { school } = req.params // when we want it in 'openForAll' section, school value will be openForAll
   const { question, askedBy, keywords, email: studentEmail } = req.body // handle keywords at the frontend
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   const lowerCaseKeywords = keywords.map((keyword) => {
     return keyword.toLowerCase()
@@ -110,7 +110,7 @@ export const deleteQuestion = async (req, res) => {
 
   const { school, id } = req.params
   const { email: studentEmail } = req.body
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   let existingSchool
   try {
@@ -185,7 +185,7 @@ export const deleteQuestion = async (req, res) => {
 
 export const getAllQuestions = async (req, res) => {
   const { school } = req.params
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   let existingSchool
   if (correctSchoolName !== 'openForAll') {
@@ -228,7 +228,7 @@ export const getAllQuestions = async (req, res) => {
 
 export const getSingleQuestion = async (req, res) => {
   const { school, id } = req.params
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   let existingSchool
   if (correctSchoolName !== 'openForAll') {
@@ -290,7 +290,7 @@ export const getSingleQuestion = async (req, res) => {
 export const addAnswer = async (req, res) => {
   const { name: studentName, email: studentEmail, answer } = req.body
   const { school, id } = req.params
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   let existingSchool
   let studentExists = false
@@ -387,7 +387,7 @@ export const addAnswer = async (req, res) => {
 
 export const getAllAnswers = async (req, res) => {
   const { school, id } = req.params
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   let existingSchool
   if (correctSchoolName !== 'openForAll') {
@@ -452,7 +452,7 @@ export const getAllAnswers = async (req, res) => {
 export const searchQuestion = async (req, res) => {
   const { question } = req.body
   const { school } = req.params
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
   let existingSchool
   if (correctSchoolName !== 'openForAll') {
     try {

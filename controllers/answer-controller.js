@@ -6,7 +6,7 @@ import e from 'express'
 export const voteAnswer = async (req, res) => {
   const { id, vote, school } = req.params
   const { email: schoolEmail} = req.body
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   // check if answer exists
   let answerExists

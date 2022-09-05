@@ -1,7 +1,8 @@
 import bcrypt from 'bcryptjs'
 import School from '../models/School.js'
-import SchoolName from '../models/SchoolName.js'
 import User from '../models/User.js'
+import QuestionId from '../models/QuestionId.js'
+import Question from '../models/Question.js'
 
 export const addSchool = async (req, res) => {
   const { school, email: adminEmail, password: adminPassword } = req.body
@@ -48,9 +49,11 @@ export const addSchool = async (req, res) => {
 export const removeSchool = async (req, res) => {
   const { email: adminEmail, password: adminPassword } = req.body
   const { school } = req.params
+  console.log(school)
   let existingSchool
   let isAdmin = false
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
+  console.log(correctSchoolName)
 
   try {
     existingSchool = await School.findOne({ school: correctSchoolName })
@@ -85,8 +88,22 @@ export const removeSchool = async (req, res) => {
       .json({ success: false, message: 'Invalid credentials' })
   }
 
+  let questionIdSchema
+  let questionId = []
   try {
     let deletedSchool = await School.deleteOne({ school: correctSchoolName })
+    let questionIdSchema = await QuestionId.findOne({school: correctSchoolName}) 
+
+    if(questionIdSchema){
+      questionId = questionIdSchema.questionId
+  
+      for(let qid of questionId){
+        let questionExists = await Question.findById(qid)
+        if(questionExists){
+          let deletedQuestion = await Question.deleteOne({_id: qid})
+        }
+      }
+    }
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message })
   }
@@ -102,7 +119,7 @@ export const addAdmin = async (req, res) => {
   const { school } = req.params
   const { email: newAdminEmail, password: newAdminPassword } = req.body
   let existingSchool, adminDetails, updatedAdminDetails
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   try {
     existingSchool = await School.findOne({ school: correctSchoolName })
@@ -153,7 +170,7 @@ export const removeAdmin = async (req, res) => {
   const { school } = req.params
   let existingSchool, adminDetails
   let adminDoesExist = false
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   try {
     existingSchool = await School.findOne({ school: correctSchoolName })
@@ -217,7 +234,7 @@ export const addStudent = async (req, res) => {
   } = req.body
   let existingSchool, updatedStudentDetails
   let studentExists = false
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   try {
     existingSchool = await School.findOne({ school: correctSchoolName })
@@ -277,7 +294,7 @@ export const removeStudent = async (req, res) => {
   const { email: studentEmail } = req.body
   let existingSchool, updatedStudentDetails
   let studentExists = false
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   try {
     existingSchool = await School.findOne({ school: correctSchoolName })
@@ -339,7 +356,7 @@ export const joinSchool = async (req, res) => {
   const { email: studentEmail, generalEmail } = req.body
   let existingSchool
   let studentExists = false
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   try {
     existingSchool = await School.findOne({ school: correctSchoolName })
@@ -397,7 +414,7 @@ export const leaveSchool = async (req, res) => {
   const { email: studentEmail, generalEmail } = req.body
   let existingSchool
   let studentExists = false
-  const correctSchoolName = school.replace('+', ' ')
+  const correctSchoolName = school.replace(/\+/g, ' ')
 
   try {
     existingSchool = await School.findOne({ school: correctSchoolName })
