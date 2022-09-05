@@ -107,73 +107,80 @@ export const addQuestion = async (req, res) => {
 
 export const deleteQuestion = async (req, res) => {
   // write deleteQuestion again!!!!
-  // add question does not exist and also check if the person is allowed to delete the question, that is he had posted that question then only let him delete
-  const { school, id, email: studentEmail } = req.params
+
+  const { school, id } = req.params
+  const { email: studentEmail } = req.body
   const correctSchoolName = school.replace('+', ' ')
 
-  let existingSchool, schoolDetails
-  if (correctSchoolName !== 'openForAll') {
-    try {
-      existingSchool = await QuestionId.findOne({ school: correctSchoolName })
-      schoolDetails = await School.findOne({school: correctSchoolName})
-    } catch (error) {
-      return res.status(500).json({ success: false, message: error.message })
-    }
-    if (!existingSchool || !schoolDetails) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'School does not exist' })
-    }
-
-    const studentDetails = schoolDetails.studentDetails
-    let studentBelongsToCollege = false
-    for(let student of studentDetails){
-      if(student.schoolEmail === studentEmail){
-        studentBelongsToCollege = true
-      }
-    }
-    if(studentBelongsToCollege === false){
-      return res.status(400).json({success: false, message: 'You dont belong to this college'})
-    }
-  } else {
-    try {
-      existingSchool = await QuestionId.findOne({ school: 'openForAll' })
-      // schoolDetails = await School.findOne({school: 'openForAll'})
-    } catch (error) {
-      return res.status(500).json({ success: false, message: error.message })
-    }
+  let existingSchool
+  try {
+    existingSchool = await QuestionId.findOne({ school: correctSchoolName })
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
   }
 
-  let questionIds = existingSchool.questionId
-  questionIds = questionIds.filter((qid) => qid !== id)
+  if (!existingSchool) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'School does not exist' })
+  }
 
-  try {
-    let updatedQuestionIds = await QuestionId.updateOne(
-      { school: correctSchoolName },
-      { $set: { questionId: questionIds } }
-    )
-    const question = await Question.findById(id)
-    if(!question){
-      return res.status(400).json({success: false, message: 'Question does not exist'})
+  const questionIdArray = existingSchool.questionId
+  let questionExists = false
+  for (let qid of questionIdArray) {
+    if (qid === id) {
+      questionExists = true
+      break
     }
-    const answerIds = question.answerId
+  }
+  if (questionExists === false) {
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: 'Question does not belong to this college',
+      })
+  }
 
-    // deleting the answers associated with the question
-    for (let aid of answerIds) {
+  // check if question to be deleted is asked by the same person who is requesting to delete the question
+  let question
+  let answerIdArray = []
+  try {
+    question = await Question.findById(id)
+    answerIdArray = question.answerId
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+  }
 
+  if (!question) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Question does not exist' })
+  }
+
+  if (question.askedByEmail !== studentEmail) {
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: 'Cannot delete question asked not asked by you',
+      })
+  }
+
+  // deleting answers associated with the question
+  try {
+    for (let aid of answerIdArray) {
       let deletedAnswer = await Answer.deleteOne({ _id: aid })
     }
-
     let deletedQuestion = await Question.deleteOne({ _id: id })
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message })
   }
 
-  return res.status(200).json({
-    success: true,
-    message: 'Question deleted successfully',
-    questionIds,
-  })
+  // if reached here it means question and the associated answers deleted successfully
+  return res
+    .status(200)
+    .json({ success: true, message: 'Question deleted successfully' })
 }
 
 export const getAllQuestions = async (req, res) => {
@@ -371,13 +378,11 @@ export const addAnswer = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message })
   }
 
-  return res
-    .status(201)
-    .json({
-      success: true,
-      message: 'Answer added successfully',
-      answerDocument,
-    })
+  return res.status(201).json({
+    success: true,
+    message: 'Answer added successfully',
+    answerDocument,
+  })
 }
 
 export const getAllAnswers = async (req, res) => {
@@ -437,13 +442,11 @@ export const getAllAnswers = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message })
   }
 
-  return res
-    .status(200)
-    .json({
-      success: true,
-      message: 'Answers retrieved successfully',
-      answersArray,
-    })
+  return res.status(200).json({
+    success: true,
+    message: 'Answers retrieved successfully',
+    answersArray,
+  })
 }
 
 export const searchQuestion = async (req, res) => {
