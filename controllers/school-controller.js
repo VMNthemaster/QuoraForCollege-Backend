@@ -31,6 +31,7 @@ export const addSchool = async (req, res) => {
   const newSchool = new School({
     school,
     adminDetails,
+    studentDetails: []
   })
 
   try {

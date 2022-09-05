@@ -3,12 +3,9 @@ import mongoose from 'mongoose'
 const studentSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
   },
   schoolEmail: {
     type: String,
-    unique: true,
-    required: true,
   },
   schoolPassword: {
     type: String,
