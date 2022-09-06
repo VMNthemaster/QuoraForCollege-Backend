@@ -49,11 +49,9 @@ export const addSchool = async (req, res) => {
 export const removeSchool = async (req, res) => {
   const { email: adminEmail, password: adminPassword } = req.body
   const { school } = req.params
-  console.log(school)
   let existingSchool
   let isAdmin = false
   const correctSchoolName = school.replace(/\+/g, ' ')
-  console.log(correctSchoolName)
 
   try {
     existingSchool = await School.findOne({ school: correctSchoolName })
@@ -341,15 +339,6 @@ export const removeStudent = async (req, res) => {
     studentDetails,
   })
 }
-
-// export const getAllSchools = async (req, res) => {
-//   let schools
-//   try {
-//     schools = await School.find({})
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: error.message })
-//   }
-// }
 
 export const joinSchool = async (req, res) => {
   const { school } = req.params
