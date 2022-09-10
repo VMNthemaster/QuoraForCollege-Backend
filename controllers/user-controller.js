@@ -110,7 +110,7 @@ export const adminLogin = async (req, res) => {
       return res.status(400).json({success: false, message: 'Invalid admin credentials'})
     }
 
-    return res.status(200).json({success: true, message: 'Admin logged in successfully'})
+    return res.status(200).json({success: true, message: 'Admin logged in successfully', existingUser})
 
 }
 
