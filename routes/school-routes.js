@@ -15,7 +15,7 @@ schoolRouter.patch('/:school/addStudent', addStudent)
 schoolRouter.patch('/:school/removeStudent', removeStudent)
 
 // student to join or leave school
-schoolRouter.post('/joinSchool/:school', joinSchool)
+schoolRouter.post('/joinSchool', joinSchool)
 schoolRouter.post('/leaveSchool/:school', leaveSchool)
 
 export default schoolRouter

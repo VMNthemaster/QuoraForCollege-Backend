@@ -32,7 +32,7 @@ export const addSchool = async (req, res) => {
   const newSchool = new School({
     school,
     adminDetails,
-    studentDetails: []
+    studentDetails: [],
   })
 
   try {
@@ -90,15 +90,17 @@ export const removeSchool = async (req, res) => {
   let questionId = []
   try {
     let deletedSchool = await School.deleteOne({ school: correctSchoolName })
-    let questionIdSchema = await QuestionId.findOne({school: correctSchoolName}) 
+    let questionIdSchema = await QuestionId.findOne({
+      school: correctSchoolName,
+    })
 
-    if(questionIdSchema){
+    if (questionIdSchema) {
       questionId = questionIdSchema.questionId
-  
-      for(let qid of questionId){
+
+      for (let qid of questionId) {
         let questionExists = await Question.findById(qid)
-        if(questionExists){
-          let deletedQuestion = await Question.deleteOne({_id: qid})
+        if (questionExists) {
+          let deletedQuestion = await Question.deleteOne({ _id: qid })
         }
       }
     }
@@ -278,13 +280,11 @@ export const addStudent = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message })
   }
 
-  return res
-    .status(200)
-    .json({
-      success: true,
-      message: 'Student added successfully',
-      studentDetails,
-    })
+  return res.status(200).json({
+    success: true,
+    message: 'Student added successfully',
+    studentDetails,
+  })
 }
 
 export const removeStudent = async (req, res) => {
@@ -341,8 +341,8 @@ export const removeStudent = async (req, res) => {
 }
 
 export const joinSchool = async (req, res) => {
-  const { school } = req.params
-  const { email: studentEmail, generalEmail } = req.body
+  // const { school } = req.params
+  const { email: studentEmail, generalEmail, school } = req.body
   let existingSchool
   let studentExists = false
   const correctSchoolName = school.replace(/\+/g, ' ')
@@ -359,10 +359,12 @@ export const joinSchool = async (req, res) => {
       .json({ success: false, message: 'School does not exist' })
   }
 
+  let singleStudentDetails
   let studentDetails = existingSchool.studentDetails
   for (let student of studentDetails) {
     if (student.schoolEmail === studentEmail) {
       studentExists = true
+      singleStudentDetails = student
       break
     }
   }
@@ -370,32 +372,48 @@ export const joinSchool = async (req, res) => {
   if (studentExists === false) {
     return res
       .status(400)
-      .json({ success: false, message: 'You are not allowed to join this school' })
+      .json({
+        success: false,
+        message: 'You are not allowed to join this school',
+      })
   }
 
   // change his userdetails school name with the provided school name
   let user
   try {
-    user = await User.findOne({email: generalEmail})
+    user = await User.findOne({ email: generalEmail })
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message })
   }
 
-  if(!user){
-    return res.status(400).json({success: false, message: 'User does not exist'})
+  if (!user) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'User does not exist' })
   }
 
-  if(user.school !== 'Anonymous'){
-    return res.status(400).json({success: false, message: 'You have already joined the school'})
+  if (user.school !== 'Anonymous') {
+    return res
+      .status(400)
+      .json({ success: false, message: 'You have already joined the school' })
   }
 
   try {
-    let updatedUser = await User.updateOne({email: generalEmail}, {$set: {school: correctSchoolName}})
+    let updatedUser = await User.updateOne(
+      { email: generalEmail },
+      { $set: { school: correctSchoolName } }
+    )
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message })
   }
 
-  return res.status(200).json({success: true, message: 'School joined successfully'})
+  return res
+    .status(200)
+    .json({
+      success: true,
+      message: 'School joined successfully',
+      singleStudentDetails,
+    })
 }
 
 export const leaveSchool = async (req, res) => {
@@ -425,29 +443,39 @@ export const leaveSchool = async (req, res) => {
     }
   }
 
-  if(studentExists === false){
-    return res.status(400).json({success: false, message: 'You need to join a school first'})
+  if (studentExists === false) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'You need to join a school first' })
   }
 
   let user
   try {
-    user = await User.findOne({email: generalEmail})
+    user = await User.findOne({ email: generalEmail })
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message })
   }
 
-  if(!user){
-    return res.status(400).json({success: false, message: 'User does not exist'})
-  }
-  else if(user.school === 'Anonymous'){
-    return res.status(400).json({success: false, message:'You need to join a school first'})
+  if (!user) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'User does not exist' })
+  } else if (user.school === 'Anonymous') {
+    return res
+      .status(400)
+      .json({ success: false, message: 'You need to join a school first' })
   }
 
   try {
-    let updatedUser = await User.updateOne({email: generalEmail}, {$set: {school: 'Anonymous'}})
+    let updatedUser = await User.updateOne(
+      { email: generalEmail },
+      { $set: { school: 'Anonymous' } }
+    )
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message })
   }
 
-  return res.status(200).json({success: true, message: 'School left successfully'})
+  return res
+    .status(200)
+    .json({ success: true, message: 'School left successfully' })
 }
