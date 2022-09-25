@@ -523,7 +523,7 @@ export const searchQuestion = async (req, res) => {
       : 0
   )
 
-  return res.json({ updatedQuestions })
+  return res.status(200).json({success: true, updatedQuestions })
 }
 
 const removeGeneralWords = (arr) => {
