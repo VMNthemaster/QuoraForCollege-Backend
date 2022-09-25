@@ -24,6 +24,8 @@ export const signup = async (req, res) => {
     name,
     email,
     password: hashedPassword,
+    upvotedAnswers: [],
+    downvotedAnswers: []
     // school,  by default it will be anonymous while signing up
   })
 
@@ -110,7 +112,30 @@ export const adminLogin = async (req, res) => {
       return res.status(400).json({success: false, message: 'Invalid admin credentials'})
     }
 
-    return res.status(200).json({success: true, message: 'Admin logged in successfully', existingUser})
+    return res.status(200).json({success: true, message: 'Admin logged in successfully', existingUser}
+    )
 
 }
 
+export const updateUser = async (req, res) => {
+  const {email, upvotesArray, downvotesArray} = req.body
+  let existingUser
+
+  try {
+    existingUser = await User.findOne({email}) 
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+  }
+
+  if(!existingUser){
+    return res.status(400).json({success: false, message: 'User does not exist'})
+  }
+
+  try {
+    let updatedUser = await User.updateOne({email}, {$set: {upvotedAnswers: upvotesArray, downvotedAnswers: downvotesArray}})
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message })
+  }
+
+  return res.status(200).json({success: true, message: 'Votes stored successfully'})
+}

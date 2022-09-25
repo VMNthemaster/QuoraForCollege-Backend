@@ -20,6 +20,16 @@ const userSchema = new mongoose.Schema({
         required: true,
         default: 'Anonymous'
     },
+    upvotedAnswers: {
+        type: [String],
+        required: true,
+        default: []
+    },
+    downvotedAnswers: {
+        type: [String],
+        required: true,
+        default: []
+    }
     
 })
 
